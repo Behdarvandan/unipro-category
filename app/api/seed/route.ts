@@ -61,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: `Veri tabanı başarıyla tohumlandı! ${allCategories.length} kategori ve ${uniqueProducts.length} benzersiz ürün/uyumluluk modeli yüklendi.`,
+      message: `Database seeded successfully!! ${allCategories.length} category and ${uniqueProducts.length} products inserted/updated.`,
     });
   } catch (error: any) {
     return NextResponse.json(
