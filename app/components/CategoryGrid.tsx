@@ -2,12 +2,22 @@
 
 import { useState, useMemo } from "react";
 
+type ProductModel = {
+  id: string;
+  model_name: string;
+  sort_order: number;
+  is_new: boolean;
+};
+
 type Product = {
   id: number;
   name: string;
   box_code: string;
+  box_code_note: string;
   capacity: string;
   product_code: string;
+  specs: any;
+  product_models: ProductModel[];
 };
 
 type Category = {
@@ -198,32 +208,76 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                     </div>
                   </div>
 
-                  {/* Products preview (first 3) */}
+                  {/* Products preview (first 2 with details) */}
                   {category.products && category.products.length > 0 && (
-                    <div className="mt-4 space-y-2">
+                    <div className="mt-4 space-y-3">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                         Ürün Örnekleri:
                       </p>
-                      <div className="space-y-1.5">
-                        {category.products.slice(0, 3).map((product) => (
+                      <div className="space-y-3">
+                        {category.products.slice(0, 2).map((product) => (
                           <div
                             key={product.id}
-                            className="text-xs text-gray-700 bg-gray-50 px-3 py-2 rounded-md"
+                            className="bg-gray-50 rounded-lg p-3 border border-gray-200"
                           >
-                            <div className="font-medium truncate">
-                              {product.name}
-                            </div>
-                            {product.box_code && (
-                              <div className="text-gray-500 text-[10px] mt-0.5">
-                                {product.box_code}
+                            {/* Product Header */}
+                            <div className="mb-2">
+                              <div className="font-semibold text-sm text-gray-800 truncate">
+                                {product.name}
                               </div>
-                            )}
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {product.box_code && (
+                                  <span className="text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded">
+                                    📦 {product.box_code}
+                                  </span>
+                                )}
+                                {product.product_code && (
+                                  <span className="text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded">
+                                    🔖 {product.product_code}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Product Models */}
+                            {product.product_models &&
+                              product.product_models.length > 0 && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <div className="text-[10px] text-gray-500 mb-1">
+                                    Uyumlu Modeller (
+                                    {product.product_models.length}):
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {product.product_models
+                                      .slice(0, 5)
+                                      .map((model) => (
+                                        <span
+                                          key={model.id}
+                                          className="inline-flex items-center gap-1 text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded"
+                                        >
+                                          {model.is_new && (
+                                            <span className="text-red-500">
+                                              ✨
+                                            </span>
+                                          )}
+                                          {model.model_name}
+                                        </span>
+                                      ))}
+                                    {product.product_models.length > 5 && (
+                                      <span className="text-[9px] text-gray-400 px-1.5 py-0.5">
+                                        +{product.product_models.length - 5}{" "}
+                                        daha
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                           </div>
                         ))}
                       </div>
-                      {category.products.length > 3 && (
+                      {category.products.length > 2 && (
                         <p className="text-xs text-gray-400 italic mt-2">
-                          +{category.products.length - 3} ürün daha...
+                          +{category.products.length - 2} ürün daha...
                         </p>
                       )}
                     </div>

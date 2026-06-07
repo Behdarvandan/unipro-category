@@ -5,7 +5,7 @@ import CategoryGrid from "./components/CategoryGrid";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  // Supabase'den kategorileri ve ilişkili ürünleri çek (Server-side)
+  // Supabase'den kategorileri, ürünleri ve modelleri çek (Server-side)
   const { data: categories, error } = await supabase
     .from("categories")
     .select(
@@ -15,8 +15,16 @@ export default async function HomePage() {
         id,
         name,
         box_code,
+        box_code_note,
         capacity,
-        product_code
+        product_code,
+        specs,
+        product_models (
+          id,
+          model_name,
+          sort_order,
+          is_new
+        )
       )
     `,
     )
