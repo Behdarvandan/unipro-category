@@ -1,24 +1,47 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-// 1. TÜM JSON DOSYALARINI İÇERİ AKTARIYORUZ
-import samsungData from "@/data/samsung.json";
-import appleData from "@/data/apple.json";
-import huwaiData from "@/data/huwai.json";
-import oppoData from "@/data/oppo.json";
-import xiaomiData from "@/data/xiaomi.json";
-import homepageData from "@/data/homepage.json";
+import fs from "fs";
+import path from "path";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-// Asıl işlemi yapacak ana fonksiyon
+// 🛠 SİHİRLİ FONKSİYON: Kirli JSON dosyasını okur, bozuk satır atlamalarını siler ve onarır.
+function getCleanedData(fileName: string) {
+  try {
+    // Projenin ana dizinindeki 'data' klasörüne gider
+    const filePath = path.join(process.cwd(), "data", fileName);
+    const rawText = fs.readFileSync(filePath, "utf8");
+
+    // Tüm fiziksel \n ve \r (satır atlama) karakterlerini tek bir boşlukla değiştirir.
+    // Bu sayede "IPHONE 12\nPRO" metni "IPHONE 12 PRO" olur, JSON asla kırılmaz!
+    const cleanedText = rawText.replace(/\r?\n|\r/g, " ");
+
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error(
+      `HATA: ${fileName} dosyası okunamadı veya parse edilemedi!`,
+      error,
+    );
+    return { products: [], categories: [] }; // Kodun çökmemesi için boş döner
+  }
+}
+
 async function seedDatabase() {
   try {
+    // 1. Dosyaları onararak içeri alıyoruz (Artık üstte import kullanmıyoruz!)
+    const samsungData = getCleanedData("samsung.json");
+    const appleData = getCleanedData("apple.json");
+    const huwaiData = getCleanedData("huwai.json");
+    const oppoData = getCleanedData("oppo.json");
+    const xiaomiData = getCleanedData("xiaomi.json");
+    const homepageData = getCleanedData("homepage.json");
+
+    // 2. TÜM MARKALARIN VE ANASAYFANIN ÜRÜNLERİNİ BİRLEŞTİRİYORUZ
     // 2. TÜM MARKALARIN VE ANASAYFANIN ÜRÜNLERİNİ TEK BİR DİZİDE BİRLEŞTİRİYORUZ
-    const allProducts = [
+    const allProductsArray = [
       ...(samsungData.products || []),
       ...(appleData.products || []),
       ...(huwaiData.products || []),
@@ -27,12 +50,20 @@ async function seedDatabase() {
       ...(homepageData.products || []),
     ];
 
-    console.log(`Toplam ${allProducts.length} ana ürün/kutu işleniyor...`);
+    // YENİ: Ürünleri tekilleştiriyoruz (ID bazlı)
+    const uniqueProductsMap = new Map();
+    allProductsArray.forEach((p) => {
+      if (p.id) uniqueProductsMap.set(p.id, p);
+    });
+    const allProducts = Array.from(uniqueProductsMap.values());
+
+    console.log(
+      `Toplam ${allProducts.length} tekil ana ürün/kutu işleniyor...`,
+    );
 
     // --- KATEGORİLERİ YÜKLEME ---
     const categoryMap = new Map();
 
-    // Önce homepage.json içindeki orijinal kategorileri ekliyoruz
     if (homepageData.categories) {
       homepageData.categories.forEach((c: any) => {
         categoryMap.set(c.id, {
@@ -44,7 +75,6 @@ async function seedDatabase() {
       });
     }
 
-    // Sonra ürünlerin içinden eksik kategori kalmış mı diye kontrol ediyoruz
     allProducts.forEach((p) => {
       if (!categoryMap.has(p.categoryId)) {
         categoryMap.set(p.categoryId, {
@@ -84,7 +114,6 @@ async function seedDatabase() {
     // --- TELEFON MODELLERİNİ (ARAMA HEDEFLERİNİ) YÜKLEME ---
     let modelsToInsert: any[] = [];
     allProducts.forEach((p) => {
-      // DİKKAT: DEFANSİF PROGRAMLAMA BURADA - Sadece geçerli bir dizi (Array) ise döngüye gir!
       if (p.mobiles && Array.isArray(p.mobiles) && p.mobiles.length > 0) {
         p.mobiles.forEach((m: any) => {
           modelsToInsert.push({
@@ -102,7 +131,7 @@ async function seedDatabase() {
       `Toplam ${modelsToInsert.length} alt telefon modeli veri tabanına yazılıyor...`,
     );
 
-    // BATCH INSERT (1000'erli paketler halinde atıyoruz ki sistem kilitlenmesin)
+    // BATCH INSERT
     const BATCH_SIZE = 1000;
     for (let i = 0; i < modelsToInsert.length; i += BATCH_SIZE) {
       const batch = modelsToInsert.slice(i, i + BATCH_SIZE);
@@ -118,7 +147,7 @@ async function seedDatabase() {
 
     return NextResponse.json({
       success: true,
-      message: "Veri tabanı başarıyla tohumlandı!",
+      message: "Veri tabanı defansif yöntemle başarıyla tohumlandı!",
       stats: {
         categories: categoriesToInsert.length,
         products: productsToInsert.length,
@@ -134,11 +163,9 @@ async function seedDatabase() {
   }
 }
 
-// 405 Hatasını önlemek için hem tarayıcıdan (GET) hem POST'tan tetiklenebilir yapıyoruz.
 export async function GET() {
   return await seedDatabase();
 }
-
 export async function POST() {
   return await seedDatabase();
 }
