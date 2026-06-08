@@ -38,10 +38,10 @@ type ProductWithCategory = Product & {
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  // URL'den gelen id parametresini al
-  const productId = params.id;
+  // URL'den gelen id parametresini al (Next.js 15'te params bir Promise)
+  const { id: productId } = await params;
 
   // Supabase'den ürün detaylarını ve ilişkili bilgileri çek
   const { data: product, error } = await supabase
