@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 type ProductModel = {
   id: string;
@@ -221,13 +222,14 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                       </p>
                       <div className="space-y-2">
                         {category.products.slice(0, 2).map((product) => (
-                          <div
+                          <Link
                             key={product.id}
-                            className="bg-slate-50 rounded-xl p-3 border border-slate-100 hover:border-slate-200 transition-colors duration-200"
+                            href={`/products/${product.id}`}
+                            className="block bg-slate-50 rounded-xl p-3 border border-slate-100 hover:border-slate-300 hover:bg-white transition-all duration-200 cursor-pointer"
                           >
                             {/* Product Header */}
                             <div className="mb-2">
-                              <div className="font-semibold text-sm text-slate-800 truncate mb-1.5">
+                              <div className="font-semibold text-sm text-slate-800 truncate mb-1.5 group-hover:text-slate-900">
                                 {product.name}
                               </div>
                               <div className="flex items-center gap-1.5 flex-wrap">
@@ -277,7 +279,7 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                                   </div>
                                 </div>
                               )}
-                          </div>
+                          </Link>
                         ))}
                       </div>
                       {category.products.length > 2 && (
