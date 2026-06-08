@@ -74,11 +74,13 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
   }, [categories, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 sm:p-8 lg:p-12">
+    <div className="min-h-screen bg-slate-50 p-6 sm:p-8 lg:p-12">
       <div className="max-w-7xl mx-auto">
         {/* Header & Search */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Kategoriler</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-4">
+            Kategoriler
+          </h1>
 
           {/* Search Bar */}
           <div className="relative max-w-2xl">
@@ -100,7 +102,7 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Kategori veya ürün ara..."
-              className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:shadow-md"
+              className="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md"
             />
             {searchQuery && (
               <button
@@ -124,13 +126,13 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
 
           {/* Results info */}
           <div className="mt-4 flex items-center gap-4">
-            <p className="text-gray-600">
+            <p className="text-slate-600 font-medium">
               {searchQuery
                 ? `${filteredCategories.length} sonuç bulundu`
                 : `Toplam ${categories.length} kategori`}
             </p>
             {searchQuery && (
-              <span className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium">
+              <span className="text-sm text-slate-700 bg-white px-3 py-1 rounded-full font-medium shadow-sm">
                 &quot;{searchQuery}&quot; için arama yapılıyor
               </span>
             )}
@@ -140,9 +142,9 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
         {/* Grid Layout */}
         {filteredCategories.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-sm mb-4">
               <svg
-                className="w-8 h-8 text-gray-400"
+                className="w-8 h-8 text-slate-400"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -153,10 +155,10 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                 <path d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Sonuç bulunamadı
             </h3>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               &quot;{searchQuery}&quot; için eşleşen kategori veya ürün
               bulunamadı
             </p>
@@ -166,43 +168,46 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
             {filteredCategories.map((category) => (
               <div
                 key={category.id}
-                className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1"
-                style={{
-                  borderLeft: `6px solid ${category.color || "#007bff"}`,
-                }}
+                className="group bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer hover:-translate-y-1"
               >
                 {/* Category Card */}
                 <div className="p-6">
-                  {/* Color indicator dot */}
-                  <div className="flex items-start gap-3 mb-3">
+                  {/* Category Header with Color Badge */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h2 className="text-lg font-bold text-slate-800 leading-tight mb-2">
+                        {category.name}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wide"
+                          style={{
+                            backgroundColor: `${category.color}15`,
+                            color: category.color || "#007bff",
+                          }}
+                        >
+                          {category.prefix || `Cat ${category.id}`}
+                        </span>
+                      </div>
+                    </div>
                     <div
-                      className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
-                      style={{ backgroundColor: category.color || "#007bff" }}
-                    />
-                    <h2 className="text-lg font-semibold text-gray-800 leading-tight group-hover:text-blue-600 transition-colors">
-                      {category.name}
-                    </h2>
-                  </div>
-
-                  {/* Category info badges */}
-                  <div className="flex items-center gap-2 mt-4 mb-4">
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                      ID: {category.id}
-                    </span>
-                    {category.prefix && (
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                        {category.prefix}
-                      </span>
-                    )}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                      style={{ backgroundColor: `${category.color}20` }}
+                    >
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: category.color || "#007bff" }}
+                      />
+                    </div>
                   </div>
 
                   {/* Product count */}
-                  <div className="border-t border-gray-100 pt-4">
+                  <div className="border-t border-slate-100 pt-4 mb-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        Ürün Sayısı:
+                      <span className="text-sm text-slate-500 font-medium">
+                        Ürün Sayısı
                       </span>
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg">
                         {category.products?.length || 0}
                       </span>
                     </div>
@@ -210,29 +215,29 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
 
                   {/* Products preview (first 2 with details) */}
                   {category.products && category.products.length > 0 && (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        Ürün Örnekleri:
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+                        Ürün Örnekleri
                       </p>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {category.products.slice(0, 2).map((product) => (
                           <div
                             key={product.id}
-                            className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                            className="bg-slate-50 rounded-xl p-3 border border-slate-100 hover:border-slate-200 transition-colors duration-200"
                           >
                             {/* Product Header */}
                             <div className="mb-2">
-                              <div className="font-semibold text-sm text-gray-800 truncate">
+                              <div className="font-semibold text-sm text-slate-800 truncate mb-1.5">
                                 {product.name}
                               </div>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {product.box_code && (
-                                  <span className="text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded">
+                                  <span className="text-[10px] text-slate-600 bg-white px-2 py-0.5 rounded-md font-medium">
                                     📦 {product.box_code}
                                   </span>
                                 )}
                                 {product.product_code && (
-                                  <span className="text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded">
+                                  <span className="text-[10px] text-slate-600 bg-white px-2 py-0.5 rounded-md font-medium">
                                     🔖 {product.product_code}
                                   </span>
                                 )}
@@ -242,10 +247,10 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                             {/* Product Models */}
                             {product.product_models &&
                               product.product_models.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                  <div className="text-[10px] text-gray-500 mb-1">
+                                <div className="mt-2 pt-2 border-t border-slate-200">
+                                  <div className="text-[10px] text-slate-500 font-medium mb-1.5">
                                     Uyumlu Modeller (
-                                    {product.product_models.length}):
+                                    {product.product_models.length})
                                   </div>
                                   <div className="flex flex-wrap gap-1">
                                     {product.product_models
@@ -253,10 +258,10 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                                       .map((model) => (
                                         <span
                                           key={model.id}
-                                          className="inline-flex items-center gap-1 text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded"
+                                          className="inline-flex items-center gap-1 text-[9px] bg-white text-slate-700 px-2 py-0.5 rounded-md font-medium border border-slate-200"
                                         >
                                           {model.is_new && (
-                                            <span className="text-red-500">
+                                            <span className="text-amber-500">
                                               ✨
                                             </span>
                                           )}
@@ -264,7 +269,7 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                                         </span>
                                       ))}
                                     {product.product_models.length > 5 && (
-                                      <span className="text-[9px] text-gray-400 px-1.5 py-0.5">
+                                      <span className="text-[9px] text-slate-400 px-2 py-0.5 font-medium">
                                         +{product.product_models.length - 5}{" "}
                                         daha
                                       </span>
@@ -276,21 +281,13 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
                         ))}
                       </div>
                       {category.products.length > 2 && (
-                        <p className="text-xs text-gray-400 italic mt-2">
+                        <p className="text-xs text-slate-400 font-medium mt-3">
                           +{category.products.length - 2} ürün daha...
                         </p>
                       )}
                     </div>
                   )}
                 </div>
-
-                {/* Colored footer accent */}
-                <div
-                  className="h-1 w-full"
-                  style={{
-                    background: `linear-gradient(90deg, ${category.color || "#007bff"}, transparent)`,
-                  }}
-                />
               </div>
             ))}
           </div>
