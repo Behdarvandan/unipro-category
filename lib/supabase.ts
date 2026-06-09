@@ -1,13 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Proje genelinde her sayfada çağırıp kullanacağımız ortak bağlantı motoru
-// Server component'ler için cache'i devre dışı bırakıyoruz
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+// Global referans tutarak Hot-Reload'da sürekli yeni bağlantı açılmasını engelliyoruz
+const globalForSupabase = globalThis as unknown as {
+  supabase: SupabaseClient | undefined;
+};
+
+export const supabase =
+  globalForSupabase.supabase ?? createClient(supabaseUrl, supabaseAnonKey);
+
+if (process.env.NODE_ENV !== "production") {
+  globalForSupabase.supabase = supabase;
+}

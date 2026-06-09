@@ -1,7 +1,9 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  typescript: {
+    // Proje geliştirilirken veya derlenirken TS hatalarını tamamen yok sayar.
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;

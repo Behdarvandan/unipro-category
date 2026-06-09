@@ -12,7 +12,7 @@ export default async function HomePage() {
   // Altındaki ürünleri ve binlerce modeli buraya yükleyerek RAM'i şişirmiyoruz!
   const { data: categories, error } = await supabase
     .from("categories")
-    .select("id, name, color, prefix, created_at")
+    .select("id, name, prefix")
     .order("id", { ascending: true });
 
   // Hata yönetimi katmanı
