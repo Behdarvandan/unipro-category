@@ -6,9 +6,15 @@ export const revalidate = 1800;
 
 const ITEMS_PER_PAGE = 20; // Sayfa başına ürün sayısı
 
-export default async function CategoryPage(props: any) {
-  const resolvedParams = await props.params;
-  const resolvedSearchParams = await props.searchParams; // URL'den searchParams oku
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams; // URL'den searchParams oku
   const rawId = resolvedParams?.id;
 
   if (!rawId) return notFound();
@@ -53,6 +59,7 @@ export default async function CategoryPage(props: any) {
     `,
     )
     .eq("category_id", categoryId)
+    .order("id", { ascending: false }) // ✅ created_at yerine id ile sıralama (en yeni ürünler önce)
     .range(offset, offset + ITEMS_PER_PAGE - 1);
 
   const totalPages = Math.ceil((totalProducts || 0) / ITEMS_PER_PAGE);

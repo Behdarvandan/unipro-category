@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // ✅ useRef eklendi (dışarı tıklama kontrolü için)
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -51,6 +51,9 @@ export default function SearchBar() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // ✅ UX İYİLEŞTİRME: Dışarı tıklama kontrolü için ref
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // 🚀 PERFORMANS: 300ms Debounce - Kullanıcı yazmayı bitirdikten sonra arama yapar
     const timer = setTimeout(() => {
@@ -82,6 +85,28 @@ export default function SearchBar() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // ✅ UX İYİLEŞTİRME: Dışarı tıklama olayını dinle
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Eğer tıklanan yer searchBarRef dışındaysa sonuçları kapat
+      if (
+        searchBarRef.current &&
+        !searchBarRef.current.contains(event.target as Node)
+      ) {
+        setResults([]); // Sonuçları temizle
+        setHasSearched(false); // Arama durumunu sıfırla
+      }
+    };
+
+    // mousedown event listener ekle
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup: Bileşen unmount olduğunda listener'ı kaldır
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []); // Boş dependency array - sadece mount/unmount'ta çalışır
 
   const fetchResults = async () => {
     // ✅ GÜVENLİK: Zaten yükleme yapılıyorsa yeni sorgu başlatma (race condition koruması)
@@ -239,7 +264,9 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
+    <div ref={searchBarRef} className="relative w-full max-w-2xl mx-auto">
+      {" "}
+      {/* ✅ ref eklendi */}
       {/* 🔍 Arama Kutusu */}
       <div className="relative">
         <input
@@ -272,7 +299,6 @@ export default function SearchBar() {
           />
         </svg>
       </div>
-
       {/* 📋 Arama Sonuçları Dropdown - Şık ve Modern */}
       {hasSearched && searchTerm.length >= 2 && (
         <div className="absolute w-full mt-3 bg-white border-2 border-gray-100 rounded-2xl shadow-2xl z-50 max-h-[32rem] overflow-y-auto overflow-x-hidden backdrop-blur-sm">

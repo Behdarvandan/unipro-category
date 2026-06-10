@@ -1,8 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 
-export default async function ProductPage(props: any) {
-  const resolvedParams = await props.params;
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = await params;
   const rawId = resolvedParams?.id;
   if (!rawId) return notFound();
 
