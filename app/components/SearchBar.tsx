@@ -4,6 +4,36 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
+// 🎨 Kategori renk ve ikon sistemi
+const CATEGORY_COLORS: {
+  [key: number]: { bg: string; text: string; border: string; icon: string };
+} = {
+  4: {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+    icon: "🛡️",
+  },
+  5: {
+    bg: "bg-indigo-50",
+    text: "text-indigo-700",
+    border: "border-indigo-200",
+    icon: "✨",
+  },
+  6: {
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
+    icon: "🔒",
+  },
+  7: {
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    border: "border-violet-200",
+    icon: "🌟",
+  },
+};
+
 // ⚡ Veritabanından gelen BİREBİR aynı tipler
 type SearchResult = {
   id: string;
@@ -12,6 +42,7 @@ type SearchResult = {
   product_name: string;
   box_code: string;
   category_id: number;
+  category_name: string;
 };
 
 export default function SearchBar() {
@@ -21,7 +52,7 @@ export default function SearchBar() {
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    // Kullanıcı yazmayı bitirdikten 300ms sonra arama yapar (Performans için)
+    // 🚀 PERFORMANS: 300ms Debounce - Kullanıcı yazmayı bitirdikten sonra arama yapar
     const timer = setTimeout(() => {
       if (searchTerm.trim().length >= 2) {
         fetchResults();
@@ -38,19 +69,62 @@ export default function SearchBar() {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      // ⚡ Yaptığımız o muazzam SQL fonksiyonunu çağırıyoruz
-      const { data, error } = await supabase.rpc("search_phone_models", {
-        search_query: searchTerm.trim(),
-      });
+      const query = searchTerm.trim();
+      const searchPattern = `%${query}%`;
+
+      // 🔐 GÜVENLİK VE LİMİT: Direkt Supabase sorgusu ile limit(50) ve çoklu alan araması
+      const { data, error } = await supabase
+        .from("product_models")
+        .select(
+          `
+          id,
+          model_name,
+          product_id,
+          products!inner (
+            id,
+            name,
+            box_code,
+            category_id,
+            categories!inner (
+              id,
+              name
+            )
+          )
+        `,
+        )
+        .or(
+          `model_name.ilike.${searchPattern},products.name.ilike.${searchPattern},products.box_code.ilike.${searchPattern}`,
+        )
+        .limit(50)
+        .order("model_name", { ascending: true });
 
       if (error) throw error;
-      setResults(data || []);
+
+      // Veriyi düzleştir (flatten)
+      const flattenedResults: SearchResult[] = (data || []).map(
+        (item: any) => ({
+          id: item.id,
+          model_name: item.model_name,
+          product_id: item.products.id,
+          product_name: item.products.name,
+          box_code: item.products.box_code,
+          category_id: item.products.category_id,
+          category_name: item.products.categories.name,
+        }),
+      );
+
+      setResults(flattenedResults);
     } catch (error) {
       console.error("Arama hatası:", error);
       setResults([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Kategori rengini al (default: mavi)
+  const getCategoryColor = (categoryId: number) => {
+    return CATEGORY_COLORS[categoryId] || CATEGORY_COLORS[4];
   };
 
   return (
@@ -61,11 +135,11 @@ export default function SearchBar() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Telefon modeli arayın... (Örn: iPhone 15, S24)"
-          className="w-full px-5 py-4 pl-12 text-lg bg-white border-2 border-blue-500 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-gray-800 placeholder-gray-400"
+          placeholder="Model arayın... (Örn: iPhone 15, Samsung S24, Xiaomi 14)"
+          className="w-full px-5 py-4 pl-12 text-lg bg-white border-2 border-blue-600 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 placeholder-slate-400"
         />
         <svg
-          className="absolute left-4 top-4 h-6 w-6 text-blue-500"
+          className="absolute left-4 top-4 h-6 w-6 text-blue-600"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -80,53 +154,107 @@ export default function SearchBar() {
         </svg>
       </div>
 
-      {/* 📋 Arama Sonuçları Dropdown */}
+      {/* 📋 Arama Sonuçları Dropdown - Şık ve Modern */}
       {hasSearched && searchTerm.length >= 2 && (
-        <div className="absolute w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto overflow-x-hidden">
+        <div className="absolute w-full mt-3 bg-white border-2 border-gray-100 rounded-2xl shadow-2xl z-50 max-h-[32rem] overflow-y-auto overflow-x-hidden backdrop-blur-sm">
           {isLoading ? (
-            <div className="p-6 text-center text-gray-500 font-medium">
-              <div className="animate-pulse flex flex-col items-center gap-2">
-                <div className="h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p>Modeller Taranıyor...</p>
+            <div className="p-8 text-center text-slate-500 font-medium">
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="h-4 w-4 border-4 border-blue-400 border-b-transparent rounded-full animate-spin animate-reverse"></div>
+                  </div>
+                </div>
+                <p className="text-lg font-semibold text-slate-700">
+                  10.000+ Model Taranıyor...
+                </p>
+                <p className="text-sm text-slate-400">Lütfen bekleyin</p>
               </div>
             </div>
           ) : results.length > 0 ? (
-            <div className="py-2">
-              {results.map((item, index) => (
-                // Sonuç Kartı
-                <Link
-                  key={`${item.id}-${index}`}
-                  href={`/category/${item.category_id}`}
-                  className="flex items-center justify-between p-4 hover:bg-blue-50 border-b border-gray-50 transition-colors last:border-0"
-                >
-                  <div className="flex flex-col">
-                    <span className="font-bold text-gray-900 text-lg">
-                      {item.model_name}
+            <div className="py-1">
+              {/* Sonuç Sayısı */}
+              <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-slate-200">
+                <p className="text-sm font-semibold text-slate-700">
+                  <span className="text-blue-600 text-lg">
+                    {results.length}
+                  </span>{" "}
+                  sonuç bulundu
+                  {results.length === 50 && (
+                    <span className="ml-2 text-xs text-orange-600 font-medium">
+                      (İlk 50 sonuç gösteriliyor)
                     </span>
-                    <span className="text-sm text-gray-500">
-                      {item.product_name}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
-                      Uyumlu Kutu
-                    </span>
-                    <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-lg font-mono font-bold border border-blue-200 shadow-sm">
-                      {item.box_code}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  )}
+                </p>
+              </div>
+
+              {/* 🎯 SONUÇ KARTLARI - Kurumsal ve Şık */}
+              {results.map((item, index) => {
+                const categoryColor = getCategoryColor(item.category_id);
+                return (
+                  <Link
+                    key={`${item.id}-${index}`}
+                    href={`/category/${item.category_id}`}
+                    className="block border-b border-slate-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 transition-all duration-200 last:border-0 group"
+                  >
+                    <div className="p-4 flex items-center justify-between gap-4">
+                      {/* Sol Taraf: Model ve Ürün Bilgisi */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-slate-900 text-lg group-hover:text-blue-700 transition-colors truncate">
+                            {item.model_name}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-slate-600 truncate mb-2">
+                          {item.product_name}
+                        </p>
+
+                        {/* Kategori Badge */}
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold ${categoryColor.bg} ${categoryColor.text} border ${categoryColor.border} rounded-md`}
+                          >
+                            <span className="text-sm">
+                              {categoryColor.icon}
+                            </span>
+                            <span className="truncate max-w-[200px]">
+                              {item.category_name}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Sağ Taraf: Kutu Kodu Badge */}
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                          Uyumlu Kutu
+                        </span>
+                        <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 rounded-xl font-mono font-bold shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 text-sm">
+                          {item.box_code}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
-            <div className="p-8 text-center flex flex-col items-center justify-center">
-              <div className="text-4xl mb-3">📵</div>
-              <p className="text-gray-900 font-medium text-lg">
-                "{searchTerm}" modeli bulunamadı.
+            <div className="p-10 text-center flex flex-col items-center justify-center">
+              <div className="text-6xl mb-4 animate-bounce">📵</div>
+              <p className="text-slate-900 font-bold text-xl mb-2">
+                "{searchTerm}" modeli bulunamadı
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Lütfen marka veya modeli kontrol edip tekrar deneyin.
+              <p className="text-slate-500 text-sm max-w-md">
+                Lütfen model adını, ürün adını veya kutu kodunu kontrol edip
+                tekrar deneyin.
               </p>
+              <div className="mt-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  💡 İpucu: "Samsung A51", "iPhone 13" veya model kodu ile
+                  arayabilirsiniz
+                </p>
+              </div>
             </div>
           )}
         </div>

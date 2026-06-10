@@ -1,7 +1,6 @@
-// @ts-nocheck
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 type ProductModel = {
   id: string;
@@ -25,11 +24,13 @@ type Product = {
 type CategoryFiltersProps = {
   allModels: ProductModel[];
   products: Product[];
+  onFilterChange?: (filteredProducts: Product[]) => void; // Filtrelenen ürünleri parent'a ilet
 };
 
 export default function CategoryFilters({
   allModels,
   products,
+  onFilterChange,
 }: CategoryFiltersProps) {
   const [selectedBrand, setSelectedBrand] = useState<string>("");
 
@@ -50,44 +51,40 @@ export default function CategoryFilters({
     return Array.from(brandSet).sort();
   }, [allModels]);
 
-  // Filtreleme işlemi
-  const handleBrandFilter = (brand: string) => {
-    setSelectedBrand(brand);
-
-    // Tüm ürün kartlarını göster
-    const productCards = document.querySelectorAll("[data-product-id]");
-
-    if (!brand) {
-      // Filtre kaldırıldı - hepsini göster
-      productCards.forEach((card) => {
-        (card as HTMLElement).style.display = "block";
-      });
-      return;
+  // Filtrelenmiş ürünleri hesapla (DOM manipülasyonu yerine React state kullan)
+  const filteredProducts = useMemo(() => {
+    // Eğer seçili marka yoksa, tüm ürünleri göster
+    if (!selectedBrand) {
+      return products;
     }
 
-    // Her ürün kartını kontrol et
-    productCards.forEach((card) => {
-      const modelElements = card.querySelectorAll("[data-model-name]");
-      let hasMatchingModel = false;
-
-      // Ürünün modellerini tara
-      modelElements.forEach((modelEl) => {
-        const modelName = modelEl.getAttribute("data-model-name") || "";
-        const modelBrand = modelName.trim().split(/\s+/)[0]?.toUpperCase();
-
-        if (modelBrand === brand) {
-          hasMatchingModel = true;
-        }
+    // Seçili markaya göre ürünleri filtrele
+    return products.filter((product) => {
+      return product.product_models?.some((model) => {
+        const modelBrand = model.model_name
+          .trim()
+          .split(/\s+/)[0]
+          ?.toUpperCase();
+        return modelBrand === selectedBrand;
       });
-
-      // Eşleşme varsa göster, yoksa gizle
-      (card as HTMLElement).style.display = hasMatchingModel ? "block" : "none";
     });
+  }, [selectedBrand, products]);
+
+  // Filtrelenmiş ürünleri parent component'a ilet
+  useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange(filteredProducts);
+    }
+  }, [filteredProducts, onFilterChange]);
+
+  // Filtreleme işlemi - sadece state güncelle
+  const handleBrandFilter = (brand: string) => {
+    setSelectedBrand(brand);
   };
 
-  // Tümünü göster
+  // Tümünü göster - filtreyi temizle
   const clearFilter = () => {
-    handleBrandFilter("");
+    setSelectedBrand("");
   };
 
   return (

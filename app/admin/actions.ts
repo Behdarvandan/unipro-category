@@ -1,27 +1,43 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin"; // Admin client kullan (RLS bypass)
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+/**
+ * Admin oturum kontrolü - Tüm admin işlemlerinden önce çağrılmalı
+ * Cookie'den admin_session kontrolü yapar
+ */
+async function checkAdminSession() {
+  const cookieStore = await cookies();
+  const adminSession = cookieStore.get("admin_session");
+
+  if (!adminSession || adminSession.value !== "authenticated") {
+    throw new Error("Yetkisiz erişim. Admin girişi gerekli.");
+  }
+}
 
 /**
  * Yeni ürün ekleme fonksiyonu
  * @param productData - Eklenecek ürün verileri
  */
 export async function addProduct(productData: any) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("addProduct çağrıldı:", productData);
 
-    // TODO: Supabase'e ürün ekleme işlemi buraya gelecek
-    // const { data, error } = await supabase
-    //   .from('products')
-    //   .insert([productData]);
+    const { data, error } = await supabaseAdmin // Admin client (RLS bypass)
+      .from("products")
+      .insert([productData])
+      .select();
 
-    // if (error) throw error;
+    if (error) throw error;
 
     // Cache'i temizle
-    // revalidatePath('/admin/products');
+    revalidatePath("/admin/products");
 
-    return { success: true, message: "Ürün başarıyla eklendi (placeholder)" };
+    return { success: true, message: "Ürün başarıyla eklendi", data };
   } catch (error) {
     console.error("addProduct hatası:", error);
     return {
@@ -37,24 +53,27 @@ export async function addProduct(productData: any) {
  * @param productData - Güncellenecek ürün verileri
  */
 export async function updateProduct(productId: string, productData: any) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("updateProduct çağrıldı:", { productId, productData });
 
-    // TODO: Supabase'de ürün güncelleme işlemi buraya gelecek
-    // const { data, error } = await supabase
-    //   .from('products')
-    //   .update(productData)
-    //   .eq('id', productId);
+    const { data, error } = await supabaseAdmin // Admin client (RLS bypass)
+      .from("products")
+      .update(productData)
+      .eq("id", productId)
+      .select();
 
-    // if (error) throw error;
+    if (error) throw error;
 
     // Cache'i temizle
-    // revalidatePath('/admin/products');
-    // revalidatePath(`/products/${productId}`);
+    revalidatePath("/admin/products");
+    revalidatePath(`/products/${productId}`);
 
     return {
       success: true,
-      message: "Ürün başarıyla güncellendi (placeholder)",
+      message: "Ürün başarıyla güncellendi",
+      data,
     };
   } catch (error) {
     console.error("updateProduct hatası:", error);
@@ -70,21 +89,22 @@ export async function updateProduct(productId: string, productData: any) {
  * @param productId - Silinecek ürünün ID'si
  */
 export async function deleteProduct(productId: string) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("deleteProduct çağrıldı:", productId);
 
-    // TODO: Supabase'den ürün silme işlemi buraya gelecek
-    // const { error } = await supabase
-    //   .from('products')
-    //   .delete()
-    //   .eq('id', productId);
+    const { error } = await supabaseAdmin // Admin client (RLS bypass)
+      .from("products")
+      .delete()
+      .eq("id", productId);
 
-    // if (error) throw error;
+    if (error) throw error;
 
     // Cache'i temizle
-    // revalidatePath('/admin/products');
+    revalidatePath("/admin/products");
 
-    return { success: true, message: "Ürün başarıyla silindi (placeholder)" };
+    return { success: true, message: "Ürün başarıyla silindi" };
   } catch (error) {
     console.error("deleteProduct hatası:", error);
     return {
@@ -106,10 +126,12 @@ export async function addCategory(categoryData: {
   name: string;
   prefix: string;
 }) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("addCategory çağrıldı:", categoryData);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin // Admin client (RLS bypass)
       .from("categories")
       .insert([categoryData])
       .select();
@@ -138,10 +160,12 @@ export async function updateCategory(
   categoryId: number,
   categoryData: { name: string; prefix: string },
 ) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("updateCategory çağrıldı:", { categoryId, categoryData });
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin // Admin client (RLS bypass)
       .from("categories")
       .update(categoryData)
       .eq("id", categoryId)
@@ -167,10 +191,12 @@ export async function updateCategory(
  * @param categoryId - Silinecek kategorinin ID'si
  */
 export async function deleteCategory(categoryId: number) {
+  await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
+
   try {
     console.log("deleteCategory çağrıldı:", categoryId);
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin // Admin client (RLS bypass)
       .from("categories")
       .delete()
       .eq("id", categoryId);
