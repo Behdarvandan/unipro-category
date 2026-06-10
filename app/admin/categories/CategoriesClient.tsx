@@ -40,13 +40,51 @@ export default function CategoriesClient({
 
     setDeletingId(id);
     const result = await deleteCategory(id);
+    setDeletingId(null);
 
     if (result.success) {
+      // ✅ Başarılı silme - Sayfayı yenile
       router.refresh();
     } else {
-      alert(result.error || "Silme işlemi başarısız oldu");
+      // ❌ HATA DURUMU - Kullanıcıya detaylı bilgi ver
+      // Alert yerine browser'ın native notification API'sini kullan
+      const errorMessage = result.error || "Silme işlemi başarısız oldu";
+
+      // Tarayıcı bildirimi oluştur
+      if (typeof window !== "undefined") {
+        // Kırmızı arka planlı error alert
+        const alertDiv = document.createElement("div");
+        alertDiv.className =
+          "fixed top-4 right-4 z-50 max-w-md bg-red-50 border-l-4 border-red-500 rounded-lg shadow-2xl p-4 animate-slide-in";
+        alertDiv.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-bold text-red-800 text-sm mb-1">Kategori Silinemedi</h3>
+              <p class="text-red-700 text-sm">${errorMessage}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-red-400 hover:text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        `;
+        document.body.appendChild(alertDiv);
+
+        // 7 saniye sonra otomatik kaldır
+        setTimeout(() => {
+          alertDiv.style.opacity = "0";
+          alertDiv.style.transform = "translateX(100%)";
+          alertDiv.style.transition = "all 0.3s ease-out";
+          setTimeout(() => alertDiv.remove(), 300);
+        }, 7000);
+      }
     }
-    setDeletingId(null);
   };
 
   const handleFormSuccess = () => {
@@ -83,7 +121,7 @@ export default function CategoriesClient({
         </button>
       </div>
 
-      {/* Categories Table */}
+      {/* Categories Table - Mobil Overflow Koruması */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {initialCategories.length === 0 ? (
           <div className="p-12 text-center">
@@ -111,7 +149,7 @@ export default function CategoriesClient({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full w-full">
               <thead>
                 <tr className="border-b border-slate-800">
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">

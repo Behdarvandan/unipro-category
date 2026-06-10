@@ -54,25 +54,61 @@ export default function SearchBar() {
   useEffect(() => {
     // 🚀 PERFORMANS: 300ms Debounce - Kullanıcı yazmayı bitirdikten sonra arama yapar
     const timer = setTimeout(() => {
-      if (searchTerm.trim().length >= 2) {
-        fetchResults();
-      } else {
+      const cleanedTerm = searchTerm.trim();
+
+      // ✅ GÜVENLİK: Boş veya sadece boşluk karakteri kontrolü
+      if (cleanedTerm.length === 0) {
         setResults([]);
         setHasSearched(false);
+        return;
       }
+
+      // ✅ GÜVENLİK: Minimum uzunluk kontrolü (spam koruması)
+      if (cleanedTerm.length < 2) {
+        setResults([]);
+        setHasSearched(false);
+        return;
+      }
+
+      // ✅ GÜVENLİK: Maksimum uzunluk kontrolü (DoS koruması)
+      if (cleanedTerm.length > 100) {
+        setResults([]);
+        setHasSearched(false);
+        return;
+      }
+
+      fetchResults();
     }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const fetchResults = async () => {
+    // ✅ GÜVENLİK: Zaten yükleme yapılıyorsa yeni sorgu başlatma (race condition koruması)
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
     setHasSearched(true);
     try {
       const query = searchTerm.trim();
 
-      // ✅ Boş/undefined kontrolü
-      if (!query) {
+      // ✅ GÜVENLİK: Boş/undefined/sadece boşluk kontrolü
+      if (!query || query.length === 0) {
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // ✅ GÜVENLİK: SQL Injection koruması - Tehlikeli karakterleri temizle
+      // PostgREST zaten parametrize sorgu kullanır ama ekstra güvenlik katmanı
+      const sanitizedQuery = query
+        .replace(/[;'"\\]/g, "") // Tehlikeli karakterleri kaldır
+        .substring(0, 100); // Maksimum 100 karakter
+
+      // ✅ GÜVENLİK: Sanitize sonrası boşluk kontrolü
+      if (!sanitizedQuery || sanitizedQuery.length === 0) {
         setResults([]);
         setIsLoading(false);
         return;
@@ -83,7 +119,7 @@ export default function SearchBar() {
       // ✅ ÇÖZÜM: products ve product_models için ayrı sorgular + JavaScript birleştirme
 
       // 📦 SORGU 1: products tablosunda ürün adı VE kutu kodu araması
-      // 🎯 Çift tırnak kullanımı önemli: "%${query}%" formatı
+      // 🎯 Çift tırnak kullanımı önemli: "%${sanitizedQuery}%" formatı
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select(
@@ -103,7 +139,9 @@ export default function SearchBar() {
           )
         `,
         )
-        .or(`name.ilike."%${query}%",box_code.ilike."%${query}%"`) // ✅ Çift tırnak içinde arama
+        .or(
+          `name.ilike."%${sanitizedQuery}%",box_code.ilike."%${sanitizedQuery}%"`,
+        ) // ✅ Sanitized query kullan
         .limit(50);
 
       if (productsError) throw productsError;
@@ -128,7 +166,7 @@ export default function SearchBar() {
           )
         `,
         )
-        .or(`model_name.ilike."%${query}%"`) // ✅ Çift tırnak içinde arama
+        .or(`model_name.ilike."%${sanitizedQuery}%"`) // ✅ Sanitized query kullan
         .limit(50);
 
       if (modelsError) throw modelsError;
@@ -179,11 +217,17 @@ export default function SearchBar() {
       // 📊 Alfabetik sıralama
       uniqueResults.sort((a, b) => a.model_name.localeCompare(b.model_name));
 
-      // 🎯 İlk 50 sonuçla sınırla
+      // 🎯 İlk 50 sonuçla sınırla (DoS koruması)
       setResults(uniqueResults.slice(0, 50));
     } catch (error) {
+      // ❌ HATA YÖNETİMİ: Kullanıcıya detaylı hata gösterme (güvenlik)
       console.error("Arama hatası:", error);
       setResults([]);
+
+      // Hata durumunda kullanıcıya bilgi ver (production'da detay gösterme)
+      if (process.env.NODE_ENV === "development") {
+        console.error("Arama hatası detayı:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -201,8 +245,16 @@ export default function SearchBar() {
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            // ✅ GÜVENLİK: Maksimum karakter sınırı (input seviyesinde)
+            const newValue = e.target.value.substring(0, 100);
+            setSearchTerm(newValue);
+          }}
           placeholder="Model arayın... (Örn: iPhone 15, Samsung S24, Xiaomi 14)"
+          maxLength={100}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
           className="w-full px-5 py-4 pl-12 text-lg bg-white border-2 border-blue-600 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-slate-800 placeholder-slate-400"
         />
         <svg

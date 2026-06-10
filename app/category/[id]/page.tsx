@@ -127,7 +127,7 @@ export default async function CategoryPage(props: any) {
             return (
               <div
                 key={product.id}
-                className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-slate-100 overflow-hidden"
+                className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-slate-100 overflow-hidden flex flex-col"
               >
                 {/* Kutu Kodu Badge */}
                 <div className="bg-gradient-to-r from-blue-50 to-slate-50 px-4 py-3 border-b border-slate-100">
@@ -148,15 +148,15 @@ export default async function CategoryPage(props: any) {
                 </div>
 
                 {/* Ürün İçeriği */}
-                <div className="p-5">
-                  {/* Ürün Adı */}
-                  <h3 className="font-bold text-slate-900 text-base leading-tight mb-4 group-hover:text-blue-700 transition-colors line-clamp-2">
+                <div className="p-5 flex flex-col flex-1">
+                  {/* Ürün Adı - Line Clamp ile Uzun İsimler İçin Koruma */}
+                  <h3 className="font-bold text-slate-900 text-base leading-tight mb-4 group-hover:text-blue-700 transition-colors line-clamp-2 min-h-[3rem]">
                     {product.name}
                   </h3>
 
-                  {/* Alt Modeller - Pill Format */}
+                  {/* Alt Modeller - Pill Format - Flex-1 ile Kart Altında Sabitle */}
                   {mobiles.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-auto">
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
                         <svg
                           className="w-3.5 h-3.5"
