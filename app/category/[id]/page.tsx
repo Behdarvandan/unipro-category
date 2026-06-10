@@ -44,8 +44,8 @@ export default async function CategoryPage({
     .eq("category_id", categoryId);
 
   // 3. Sayfalanmış ürünleri al - range() ile Server-Side Pagination
-  // Alt modelleri de dahil et (product_mobiles join ile)
-  const { data: products } = await supabase
+  // Alt modelleri de dahil et (product_models join ile - ✅ DÜZELTİLDİ: product_mobiles → product_models)
+  const { data: products, error: productsError } = await supabase
     .from("products")
     .select(
       `
@@ -53,14 +53,18 @@ export default async function CategoryPage({
       name, 
       box_code, 
       product_code,
-      product_mobiles(
-        mobile:mobiles(id, name)
-      )
+      product_models(id, model_name)
     `,
+      // ✅ DÜZELTİLDİ: mobile:mobiles(...) kaldırıldı, model_name direkt product_models'den alınıyor
     )
     .eq("category_id", categoryId)
     .order("id", { ascending: false }) // ✅ created_at yerine id ile sıralama (en yeni ürünler önce)
     .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+  // Hata kontrolü ekle
+  if (productsError) {
+    console.error("❌ KATEGORİ SAYFASI VERİ HATASI:", productsError);
+  }
 
   const totalPages = Math.ceil((totalProducts || 0) / ITEMS_PER_PAGE);
 
@@ -123,13 +127,10 @@ export default async function CategoryPage({
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
         <div className="grid grid-cols-1 w-full md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {products?.map((product: any) => {
-            // Alt modelleri düzenle
-            const mobiles =
-              product.product_mobiles
-                ?.map((pm: any) => pm.mobile)
-                .filter(Boolean) || [];
-            const displayedMobiles = mobiles.slice(0, 6);
-            const remainingCount = mobiles.length - displayedMobiles.length;
+            // ✅ DÜZELTİLDİ: pm.mobile.name yerine pm.model_name kullanılıyor (yeni yapı)
+            const models = product.product_models || [];
+            const displayedModels = models.slice(0, 6);
+            const remainingCount = models.length - displayedModels.length;
 
             return (
               <div
@@ -162,7 +163,7 @@ export default async function CategoryPage({
                   </h3>
 
                   {/* Alt Modeller - Pill Format - Flex-1 ile Kart Altında Sabitle */}
-                  {mobiles.length > 0 && (
+                  {models.length > 0 && (
                     <div className="space-y-2 mt-auto">
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
                         <svg
@@ -181,12 +182,13 @@ export default async function CategoryPage({
                         Uyumlu Modeller
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {displayedMobiles.map((mobile: any, idx: number) => (
+                        {/* ✅ DÜZELTİLDİ: mobile.name yerine model.model_name kullanılıyor */}
+                        {displayedModels.map((model: any, idx: number) => (
                           <span
-                            key={mobile.id || idx}
+                            key={model.id || idx}
                             className="inline-flex items-center bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full hover:bg-slate-200 transition-colors"
                           >
-                            {mobile.name}
+                            {model.model_name}
                           </span>
                         ))}
                         {remainingCount > 0 && (
