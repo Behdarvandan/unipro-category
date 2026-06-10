@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 // Products verisini çek (server-side pagination)
 async function getProducts(page: number = 1) {
   const pageSize = 20;

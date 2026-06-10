@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import CategoriesClient from "./CategoriesClient";
 
+export const dynamic = "force-dynamic";
+
 // Kategorileri Supabase'den çek
 async function getCategories() {
   const { data, error } = await supabase
