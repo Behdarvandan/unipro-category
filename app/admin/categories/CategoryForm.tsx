@@ -63,8 +63,8 @@ export default function CategoryForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-md my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <h2 className="text-xl font-semibold text-white">
@@ -141,19 +141,19 @@ export default function CategoryForm({
             </p>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+          {/* 📱 Buttons - Mobilde alt alta, masaüstünde yan yana */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+              className="w-full sm:flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors order-2 sm:order-1"
               disabled={loading}
             >
               İptal
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
               disabled={loading}
             >
               {loading ? "Kaydediliyor..." : category ? "Güncelle" : "Ekle"}

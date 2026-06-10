@@ -98,11 +98,11 @@ export default function CategoriesClient({
 
   return (
     <>
-      {/* Add Button */}
+      {/* 📱 Add Button - Mobilde tam genişlik */}
       <div className="mb-6 flex justify-end">
         <button
           onClick={handleAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -121,47 +121,47 @@ export default function CategoriesClient({
         </button>
       </div>
 
-      {/* Categories Table - Mobil Overflow Koruması */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        {initialCategories.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4">
-              <svg
-                className="w-8 h-8 text-slate-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                />
-              </svg>
+      {/* 📱 Categories Table - Mobil Overflow Koruması İyileştirildi */}
+      <div className="w-full overflow-x-auto -mx-4 sm:mx-0 rounded-lg border border-slate-800">
+        <div className="bg-slate-900 min-w-max sm:min-w-0">
+          {initialCategories.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4">
+                <svg
+                  className="w-8 h-8 text-slate-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Henüz kategori yok
+              </h3>
+              <p className="text-slate-400 mb-6">
+                İlk kategoriyi eklemek için yukarıdaki butona tıklayın
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Henüz kategori yok
-            </h3>
-            <p className="text-slate-400 mb-6">
-              İlk kategoriyi eklemek için yukarıdaki butona tıklayın
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full w-full">
+          ) : (
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
                     ID
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
                     Kategori Adı
                   </th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-300">
+                  <th className="text-left px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
                     Önek
                   </th>
-                  <th className="text-right px-6 py-4 text-sm font-semibold text-slate-300">
+                  <th className="text-right px-3 sm:px-6 py-3 sm:py-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
                     İşlemler
                   </th>
                 </tr>
@@ -172,21 +172,21 @@ export default function CategoriesClient({
                     key={category.id}
                     className="hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-slate-400 text-sm">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-slate-400 text-sm whitespace-nowrap">
                       {category.id}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <span className="text-white font-medium">
                         {category.name}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
                         {category.prefix}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
                         <button
                           onClick={() => handleEdit(category)}
                           className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors"
@@ -254,8 +254,8 @@ export default function CategoriesClient({
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Modal Form */}
