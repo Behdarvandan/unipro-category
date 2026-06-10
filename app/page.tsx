@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import CategoryGrid from "./components/CategoryGrid";
-import SearchBar from "./components/SearchBar";
+import Link from "next/link";
 
 // ⚡ MİMARİ DOKUNUŞ: Sayfayı her istekte sıfırdan oluşturmak yerine,
 // Arka planda saatte bir (3600 saniye) önbelleğe (Cache) alıyoruz.
@@ -40,7 +40,7 @@ export default async function HomePage() {
         </div>
 
         {/* İçerik */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-16 lg:py-24">
           <div className="text-center space-y-8">
             {/* Ana Slogan */}
             <div className="space-y-4">
@@ -102,14 +102,35 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* 🔍 Arama Kutusu - Hero'nun Tam Kalbinde */}
+            {/* ⚡ ANA EYLEM BUTONU - Kategorilere Yönlendirme */}
             <div className="pt-8 pb-4">
-              <SearchBar />
+              {/* ✅ DÜZELTİLDİ: onClick event handler kaldırıldı. 
+                  Artık sadece standart Next.js Link kullanıyor. 
+                  CSS'deki scroll-behavior: smooth zaten smooth scroll sağlıyor. */}
+              <Link
+                href="#categories"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-700 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-bold text-lg group"
+              >
+                <span>Tüm Kataloğu İncele</span>
+                <svg
+                  className="w-6 h-6 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </Link>
             </div>
 
             {/* Bilgilendirme Metni */}
             <p className="text-sm text-blue-200 max-w-2xl mx-auto">
-              💡 Model adı, ürün adı veya kutu kodu ile arama yapabilirsiniz
+              💡 Arama yapmak için üst menüdeki arama çubuğunu kullanabilirsiniz
             </p>
           </div>
         </div>
@@ -132,7 +153,10 @@ export default async function HomePage() {
       </section>
 
       {/* 📦 KATEGORİ VİTRİNİ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <section
+        id="categories"
+        className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-16"
+      >
         {/* Kategori Başlık */}
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
@@ -150,9 +174,9 @@ export default async function HomePage() {
       </section>
 
       {/* 🎨 İSTATİSTİKLER KUTUSU - Opsiyonel Premium Dokunuş */}
-      <section className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+      <section className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-8 md:py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="grid grid-cols-1 w-full md:grid-cols-3 gap-6 md:gap-8 text-center">
             <div className="space-y-2">
               <div className="text-4xl sm:text-5xl font-extrabold text-blue-200">
                 10,000+

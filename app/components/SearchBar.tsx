@@ -70,10 +70,46 @@ export default function SearchBar() {
     setHasSearched(true);
     try {
       const query = searchTerm.trim();
-      const searchPattern = `%${query}%`;
 
-      // 🔐 GÜVENLİK VE LİMİT: Direkt Supabase sorgusu ile limit(50) ve çoklu alan araması
-      const { data, error } = await supabase
+      // ✅ Boş/undefined kontrolü
+      if (!query) {
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // 🔧 DÜZELTME: İki ayrı sorgu atıyoruz (PostgREST PGRST100 hatası önleme)
+      // ❌ SORUN: Tek .or() içinde hem ana tablo hem foreign tablo aranamaz
+      // ✅ ÇÖZÜM: products ve product_models için ayrı sorgular + JavaScript birleştirme
+
+      // 📦 SORGU 1: products tablosunda ürün adı VE kutu kodu araması
+      // 🎯 Çift tırnak kullanımı önemli: "%${query}%" formatı
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select(
+          `
+          id,
+          name,
+          box_code,
+          category_id,
+          categories!inner (
+            id,
+            name
+          ),
+          product_models (
+            id,
+            model_name,
+            product_id
+          )
+        `,
+        )
+        .or(`name.ilike."%${query}%",box_code.ilike."%${query}%"`) // ✅ Çift tırnak içinde arama
+        .limit(50);
+
+      if (productsError) throw productsError;
+
+      // 📱 SORGU 2: product_models tablosunda model adı araması
+      const { data: modelsData, error: modelsError } = await supabase
         .from("product_models")
         .select(
           `
@@ -92,16 +128,28 @@ export default function SearchBar() {
           )
         `,
         )
-        .or(
-          `model_name.ilike.${searchPattern},products.name.ilike.${searchPattern},products.box_code.ilike.${searchPattern}`,
-        )
-        .limit(50)
-        .order("model_name", { ascending: true });
+        .or(`model_name.ilike."%${query}%"`) // ✅ Çift tırnak içinde arama
+        .limit(50);
 
-      if (error) throw error;
+      if (modelsError) throw modelsError;
 
-      // Veriyi düzleştir (flatten)
-      const flattenedResults: SearchResult[] = (data || []).map(
+      // 🔄 Products sonuçlarını düzleştir (flatten) - Her ürünün her modeli için ayrı satır
+      const flattenedProductsResults: SearchResult[] = (
+        productsData || []
+      ).flatMap((product: any) =>
+        (product.product_models || []).map((model: any) => ({
+          id: model.id,
+          model_name: model.model_name,
+          product_id: product.id,
+          product_name: product.name,
+          box_code: product.box_code,
+          category_id: product.category_id,
+          category_name: product.categories.name,
+        })),
+      );
+
+      // 🔄 Models sonuçlarını düzleştir (flatten)
+      const flattenedModelsResults: SearchResult[] = (modelsData || []).map(
         (item: any) => ({
           id: item.id,
           model_name: item.model_name,
@@ -113,7 +161,26 @@ export default function SearchBar() {
         }),
       );
 
-      setResults(flattenedResults);
+      // 🔀 İki sorguyu JavaScript seviyesinde birleştir
+      const combinedResults = [
+        ...flattenedProductsResults,
+        ...flattenedModelsResults,
+      ];
+
+      // 🎯 Tekrar edenleri temizle (aynı model_id + product_id kombinasyonu)
+      const uniqueResults = combinedResults.filter(
+        (item, index, self) =>
+          index ===
+          self.findIndex(
+            (t) => t.id === item.id && t.product_id === item.product_id,
+          ),
+      );
+
+      // 📊 Alfabetik sıralama
+      uniqueResults.sort((a, b) => a.model_name.localeCompare(b.model_name));
+
+      // 🎯 İlk 50 sonuçla sınırla
+      setResults(uniqueResults.slice(0, 50));
     } catch (error) {
       console.error("Arama hatası:", error);
       setResults([]);

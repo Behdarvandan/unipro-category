@@ -188,27 +188,117 @@ export async function updateCategory(
 
 /**
  * Kategori silme fonksiyonu
+ * Foreign key kısıtlamasına saygılı güvenli silme işlemi
  * @param categoryId - Silinecek kategorinin ID'si
  */
 export async function deleteCategory(categoryId: number) {
   await checkAdminSession(); // Güvenlik: Admin oturum kontrolü
 
   try {
-    console.log("deleteCategory çağrıldı:", categoryId);
+    console.log("🔍 deleteCategory çağrıldı - Kontrol edilen ID:", categoryId);
+    console.log("🔍 ID tipi:", typeof categoryId);
 
-    const { error } = await supabaseAdmin // Admin client (RLS bypass)
+    // ADIM 1: Kategoriye ait ürün kontrolü
+    console.log("📊 ADIM 1: Kategoriye ait ürün kontrolü başlıyor...");
+    const { data: productsInCategory, error: checkError } = await supabaseAdmin
+      .from("products")
+      .select("id")
+      .eq("category_id", categoryId)
+      .limit(1);
+
+    console.log("📊 Ürün kontrolü sonucu:", {
+      productsFound: productsInCategory?.length || 0,
+      productsData: productsInCategory,
+      checkError: checkError ? JSON.stringify(checkError) : null,
+    });
+
+    if (checkError) {
+      console.error("❌ Ürün kontrolü hatası:", JSON.stringify(checkError));
+      throw checkError;
+    }
+
+    // ADIM 2: Ürün varsa işlemi durdur
+    if (productsInCategory && productsInCategory.length > 0) {
+      console.log(
+        "⚠️ Kategoriye ait ürün bulundu, silme işlemi iptal ediliyor",
+      );
+      return {
+        success: false,
+        error:
+          "Bu kategoriye ait ürünler bulunuyor. Kategoriyi silebilmek için önce içindeki ürünleri silmeli veya başka kategoriye taşımalısınız.",
+      };
+    }
+
+    // ADIM 2.5: product_models tablosunda kontrol
+    console.log("📊 ADIM 2.5: product_models tablosunda kontrol...");
+    const { data: modelsInCategory, error: modelsCheckError } =
+      await supabaseAdmin
+        .from("product_models")
+        .select("id")
+        .eq("category_id", categoryId)
+        .limit(1);
+
+    console.log("📊 Model kontrolü sonucu:", {
+      modelsFound: modelsInCategory?.length || 0,
+      modelsData: modelsInCategory,
+      modelsCheckError: modelsCheckError
+        ? JSON.stringify(modelsCheckError)
+        : null,
+    });
+
+    if (modelsCheckError) {
+      console.error(
+        "❌ Model kontrolü hatası:",
+        JSON.stringify(modelsCheckError),
+      );
+      // Model tablosu yoksa veya hata varsa devam et (isteğe bağlı tablo olabilir)
+    }
+
+    if (modelsInCategory && modelsInCategory.length > 0) {
+      console.log(
+        "⚠️ Kategoriye ait model bulundu, silme işlemi iptal ediliyor",
+      );
+      return {
+        success: false,
+        error:
+          "Bu kategoriye ait modeller bulunuyor. Kategoriyi silebilmek için önce içindeki modelleri silmeli veya başka kategoriye taşımalısınız.",
+      };
+    }
+
+    // ADIM 3: Güvenli silme işlemi
+    console.log("🗑️ ADIM 3: Kategori silme işlemi başlıyor...");
+    const { data: deletedData, error: deleteError } = await supabaseAdmin
       .from("categories")
       .delete()
-      .eq("id", categoryId);
+      .eq("id", categoryId)
+      .select(); // Silinen veriyi görmek için select ekle
 
-    if (error) throw error;
+    console.log("🗑️ Silme işlemi sonucu:", {
+      deletedData,
+      deleteError: deleteError ? JSON.stringify(deleteError, null, 2) : null,
+      errorMessage: deleteError?.message,
+      errorDetails: deleteError?.details,
+      errorHint: deleteError?.hint,
+      errorCode: deleteError?.code,
+    });
 
-    // Cache'i temizle
+    if (deleteError) {
+      console.error(
+        "❌ Kategori silme hatası (tam detay):",
+        JSON.stringify(deleteError, null, 2),
+      );
+      throw deleteError;
+    }
+
+    console.log("✅ Kategori başarıyla silindi:", deletedData);
+
+    // Cache'i temizle - Kategori listesini yeniden yükle
     revalidatePath("/admin/categories");
 
     return { success: true, message: "Kategori başarıyla silindi" };
   } catch (error) {
-    console.error("deleteCategory hatası:", error);
+    console.error("❌ deleteCategory genel hatası:", error);
+    console.error("❌ Hata detayı (JSON):", JSON.stringify(error, null, 2));
     return {
       success: false,
       error: error instanceof Error ? error.message : "Bilinmeyen hata",

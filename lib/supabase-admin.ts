@@ -1,7 +1,15 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// ✅ DEĞİŞTİRİLDİ: Ünlem (!) yerine OR (||) operatörü ile varsayılan değer atandı
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+// ✅ EKLENDİ: Çevre değişkenleri eksikse sistemin anında anlaşılır bir uyarı fırlatması sağlandı
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+  throw new Error(
+    "KRİTİK HATA: SUPABASE_SERVICE_ROLE_KEY veya URL .env.local dosyasında bulunamadı!",
+  );
+}
 
 // Admin yetkisine sahip Supabase client (Service Role Key kullanır)
 // Bu client RLS (Row Level Security) kurallarını bypass eder

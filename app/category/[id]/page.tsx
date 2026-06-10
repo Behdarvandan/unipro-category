@@ -61,7 +61,7 @@ export default async function CategoryPage(props: any) {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* SAYFA BAŞLIĞI - Tech-Blue Banner */}
       <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-slate-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-1 h-12 bg-white rounded-full"></div>
             <h1 className="text-4xl font-bold tracking-tight">
@@ -113,8 +113,8 @@ export default async function CategoryPage(props: any) {
       </header>
 
       {/* ÜRÜN GRİDİ */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
+        <div className="grid grid-cols-1 w-full md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {products?.map((product: any) => {
             // Alt modelleri düzenle
             const mobiles =
@@ -220,11 +220,11 @@ export default async function CategoryPage(props: any) {
 
         {/* PAGINATION - Modern Tasarım */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-3 mt-12 pb-8">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-3 mt-8 md:mt-12 pb-6 md:pb-8">
             {currentPage > 1 ? (
               <Link
                 href={`/category/${categoryId}?page=${currentPage - 1}`}
-                className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
+                className="group w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium text-sm md:text-base"
               >
                 <svg
                   className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
@@ -244,7 +244,7 @@ export default async function CategoryPage(props: any) {
             ) : (
               <button
                 disabled
-                className="flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium"
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium text-sm md:text-base"
               >
                 <svg
                   className="w-5 h-5"
@@ -264,14 +264,14 @@ export default async function CategoryPage(props: any) {
             )}
 
             {/* Sayfa Numarası Göstergesi */}
-            <div className="px-6 py-3 bg-white border-2 border-blue-600 text-blue-700 rounded-lg font-bold shadow-sm">
+            <div className="w-full md:w-auto px-4 md:px-6 py-2.5 md:py-3 bg-white border-2 border-blue-600 text-blue-700 rounded-lg font-bold shadow-sm text-center text-sm md:text-base">
               {currentPage} / {totalPages}
             </div>
 
             {currentPage < totalPages ? (
               <Link
                 href={`/category/${categoryId}?page=${currentPage + 1}`}
-                className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
+                className="group w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium text-sm md:text-base"
               >
                 Sonraki Sayfa
                 <svg
@@ -291,7 +291,7 @@ export default async function CategoryPage(props: any) {
             ) : (
               <button
                 disabled
-                className="flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium"
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium text-sm md:text-base"
               >
                 Sonraki Sayfa
                 <svg

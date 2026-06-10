@@ -12,39 +12,57 @@ async function getProducts(page: number = 1) {
     .from("products")
     .select("*", { count: "exact", head: true });
 
-  // Sayfalı veriyi çek
-  const { data, error } = await supabase
+  // Sayfalı veriyi çek - Sadece ürün tablosundan veri çek (join yok)
+  const { data: productsData, error: productsError } = await supabase
     .from("products")
-    .select(
-      `
-      id,
-      name,
-      description,
-      category_id,
-      image_url,
-      created_at,
-      categories (
-        name
-      )
-    `,
-    )
-    .order("id", { ascending: true })
+    .select("id, name, description, category_id") // created_at kaldırıldı (kolon veritabanında yok)
+    .order("id", { ascending: false }) // En yeni ürünler ilk sırada
     .range(from, to);
 
-  if (error) {
-    console.error("Ürünler yüklenemedi:", error);
+  if (productsError) {
+    console.error("❌ Ürün yükleme hatası detayları:", {
+      message: productsError.message,
+      details: productsError.details,
+      hint: productsError.hint,
+      code: productsError.code,
+      fullError: JSON.stringify(productsError, null, 2),
+    });
     return { products: [], totalCount: 0 };
   }
 
-  return { products: data || [], totalCount: count || 0 };
+  // Kategorileri ayrı bir sorgu ile çek
+  const { data: categoriesData, error: categoriesError } = await supabase
+    .from("categories")
+    .select("id, name");
+
+  if (categoriesError) {
+    console.error("❌ Kategori yükleme hatası:", categoriesError);
+  }
+
+  // Kategorileri map'e çevir (hızlı erişim için)
+  const categoriesMap = new Map(
+    categoriesData?.map((cat) => [cat.id, cat.name]) || [],
+  );
+
+  // Ürünlere kategori adını JavaScript seviyesinde eşleştir
+  const products =
+    productsData?.map((product) => ({
+      ...product,
+      categories: {
+        name: categoriesMap.get(product.category_id) || "N/A",
+      },
+    })) || [];
+
+  return { products, totalCount: count || 0 };
 }
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
-  const currentPage = Number(searchParams.page) || 1;
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
   const { products, totalCount } = await getProducts(currentPage);
   const pageSize = 20;
   const totalPages = Math.ceil(totalCount / pageSize);
