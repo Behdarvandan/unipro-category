@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // İstatistikleri Supabase'den çek
 async function getStats() {
   try {
