@@ -4,6 +4,8 @@ import Link from "next/link";
 import { logoutAction } from "./logout-action";
 import { useState } from "react";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminLayout({
   children,
 }: {
