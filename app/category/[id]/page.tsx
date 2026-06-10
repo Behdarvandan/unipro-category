@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link"; // Pagination için Link bileşeni
 
+export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 
 const ITEMS_PER_PAGE = 20; // Sayfa başına ürün sayısı
