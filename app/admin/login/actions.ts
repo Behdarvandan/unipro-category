@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createSessionToken, ADMIN_SESSION_MAX_AGE } from "@/lib/admin-session";
 
 export async function loginAction(formData: FormData) {
   const password = formData.get("password") as string;
@@ -16,13 +17,13 @@ export async function loginAction(formData: FormData) {
     return { error: "Hatalı Şifre" };
   }
 
-  // Başarılı giriş - Cookie'yi set et
+  // Başarılı giriş - İmzalı, süresi dolan oturum token'ını cookie'ye yaz
   const cookieStore = await cookies();
-  cookieStore.set("admin_session", "authenticated", {
+  cookieStore.set("admin_session", createSessionToken(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 gün
+    maxAge: ADMIN_SESSION_MAX_AGE,
     path: "/",
   });
 

@@ -47,9 +47,10 @@ async function getModels(page: number = 1) {
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
-  const currentPage = Number(searchParams.page) || 1;
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
   const { models, totalCount } = await getModels(currentPage);
   const pageSize = 20;
   const totalPages = Math.ceil(totalCount / pageSize);

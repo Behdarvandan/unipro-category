@@ -3,16 +3,17 @@
 import { supabaseAdmin } from "@/lib/supabase-admin"; // Admin client kullan (RLS bypass)
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { verifySessionToken } from "@/lib/admin-session";
 
 /**
  * Admin oturum kontrolü - Tüm admin işlemlerinden önce çağrılmalı
- * Cookie'den admin_session kontrolü yapar
+ * Cookie'deki admin_session token'ının imzasını ve süresini doğrular
  */
 async function checkAdminSession() {
   const cookieStore = await cookies();
   const adminSession = cookieStore.get("admin_session");
 
-  if (!adminSession || adminSession.value !== "authenticated") {
+  if (!verifySessionToken(adminSession?.value)) {
     throw new Error("Yetkisiz erişim. Admin girişi gerekli.");
   }
 }

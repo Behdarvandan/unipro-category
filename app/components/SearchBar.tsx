@@ -126,11 +126,11 @@ export default function SearchBar() {
         return;
       }
 
-      // ✅ GÜVENLİK: SQL Injection koruması - Tehlikeli karakterleri temizle
-      // PostgREST zaten parametrize sorgu kullanır ama ekstra güvenlik katmanı
+      // ✅ GÜVENLİK: PostgREST .or() filtre sözdizimini bozabilecek karakterleri
+      // silmek yerine backslash ile kaçışla (\, ", ,, (, ) karakterleri)
       const sanitizedQuery = query
-        .replace(/[;'"\\]/g, "") // Tehlikeli karakterleri kaldır
-        .substring(0, 100); // Maksimum 100 karakter
+        .substring(0, 100) // Maksimum 100 karakter
+        .replace(/[\\",()]/g, (char) => `\\${char}`);
 
       // ✅ GÜVENLİK: Sanitize sonrası boşluk kontrolü
       if (!sanitizedQuery || sanitizedQuery.length === 0) {
